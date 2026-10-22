@@ -1,0 +1,540 @@
+{
+  "info": {
+    "name": "Geekay Admin API",
+    "description": "Admin account admin@luxora.com / admin123. Manage staff, services, and car items, then assign the job, generate the bill, download the invoice, and complete it. baseUrl is http://localhost:5000. bookingId comes from the customer booking.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "staffId",
+      "value": ""
+    },
+    {
+      "key": "customerId",
+      "value": ""
+    },
+    {
+      "key": "serviceId",
+      "value": ""
+    },
+    {
+      "key": "accessoryId",
+      "value": ""
+    },
+    {
+      "key": "createdServiceId",
+      "value": ""
+    },
+    {
+      "key": "createdAccessoryId",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@luxora.com\",\n  \"password\": \"admin123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) pm.collectionVariables.set('adminToken', json.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/me"
+      }
+    },
+    {
+      "name": "List users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const staff = (json.users || []).find((user) => user.role === 'staff' || user.role === 'washer');",
+              "if (staff) pm.collectionVariables.set('staffId', staff.id);",
+              "const customer = (json.users || []).find((user) => user.role === 'client');",
+              "if (customer) pm.collectionVariables.set('customerId', customer.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create staff user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"New Staff\",\n  \"email\": \"staff.new@example.com\",\n  \"phone\": \"+919800000099\",\n  \"password\": \"staff123\",\n  \"role\": \"staff\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Update user",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users/{{staffId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+919800000098\",\n  \"isActive\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "List services",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/services?all=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const service = (json.services || [])[0];",
+              "if (service) pm.collectionVariables.set('serviceId', service._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create service",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/services",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "title",
+              "value": "Engine Bay Cleaning",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "Clean the engine bay.",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "799",
+              "type": "text"
+            },
+            {
+              "key": "durationMinutes",
+              "value": "45",
+              "type": "text"
+            },
+            {
+              "key": "steps",
+              "value": "[]",
+              "type": "text"
+            },
+            {
+              "key": "image",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.service) pm.collectionVariables.set('createdServiceId', json.service._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update service",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/services/{{createdServiceId}}",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "title",
+              "value": "Engine Bay Cleaning",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "899",
+              "type": "text"
+            },
+            {
+              "key": "keepImage",
+              "value": "",
+              "type": "text"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete service",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/services/{{createdServiceId}}"
+      }
+    },
+    {
+      "name": "List car items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/accessories?all=1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const item = (json.accessories || [])[0];",
+              "if (item) pm.collectionVariables.set('accessoryId', item._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create car item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/accessories",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sample item\",\n  \"category\": \"Cabin\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.accessory) pm.collectionVariables.set('createdAccessoryId', json.accessory._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update car item",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/accessories/{{createdAccessoryId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"category\": \"Cabin\",\n  \"isActive\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "Delete car item",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/accessories/{{createdAccessoryId}}"
+      }
+    },
+    {
+      "name": "All jobs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings"
+      }
+    },
+    {
+      "name": "Book for a customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clientId\": \"{{customerId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"vehicleName\": \"Honda City\",\n  \"vehicleNumber\": \"TN11AB1234\",\n  \"scheduledDate\": \"2026-10-28\",\n  \"scheduledTime\": \"11:00 AM\",\n  \"phone\": \"+919876543214\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.booking) pm.collectionVariables.set('bookingId', json.booking._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assign staff",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/assign",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"staffIds\": [\"{{staffId}}\"]\n}"
+        }
+      }
+    },
+    {
+      "name": "Generate bill",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/invoice",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"discount\": 0,\n  \"taxPercent\": 18,\n  \"method\": \"upi\",\n  \"notes\": \"Paid at the counter\",\n  \"extras\": []\n}"
+        }
+      }
+    },
+    {
+      "name": "All invoices",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/invoices"
+      }
+    },
+    {
+      "name": "Download invoice",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/invoices/{{bookingId}}/download"
+      }
+    },
+    {
+      "name": "Complete process",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/complete",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"method\": \"upi\",\n  \"notes\": \"Car handed over\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Cancel booking",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/cancel",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notes\": \"Cancelled by admin\"\n}"
+        }
+      }
+    }
+  ]
+}

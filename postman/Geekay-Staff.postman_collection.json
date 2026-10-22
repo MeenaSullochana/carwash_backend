@@ -1,0 +1,396 @@
+{
+  "info": {
+    "name": "Geekay Staff API",
+    "description": "Staff accounts washer1@luxora.com / wash123 and washer2@luxora.com / wash123. Use one login. Set bookingId from the customer collection, or let Open jobs save the first job. Upload several before photos and several after photos. baseUrl is http://localhost:5000.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "staffToken",
+      "value": ""
+    },
+    {
+      "key": "staffId",
+      "value": ""
+    },
+    {
+      "key": "bookingId",
+      "value": ""
+    },
+    {
+      "key": "accessoryId",
+      "value": ""
+    },
+    {
+      "key": "carAccessoryId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Login Arun",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"washer1@luxora.com\",\n  \"password\": \"wash123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) pm.collectionVariables.set('staffToken', json.token);",
+              "if (json.user && json.user.id) pm.collectionVariables.set('staffId', json.user.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login Vikram",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"washer2@luxora.com\",\n  \"password\": \"wash123\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) pm.collectionVariables.set('staffToken', json.token);",
+              "if (json.user && json.user.id) pm.collectionVariables.set('staffId', json.user.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/auth/me"
+      }
+    },
+    {
+      "name": "List staff",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/users?role=staff"
+      }
+    },
+    {
+      "name": "Open jobs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const booking = (json.bookings || [])[0];",
+              "if (booking && !pm.collectionVariables.get('bookingId')) pm.collectionVariables.set('bookingId', booking._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "My work",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings?scope=mine"
+      }
+    },
+    {
+      "name": "Job detail",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}"
+      }
+    },
+    {
+      "name": "Car accessory catalog",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/accessories"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const item = (json.accessories || [])[0];",
+              "if (item) pm.collectionVariables.set('accessoryId', item._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Upload before images",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/before-images",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": "",
+              "description": "Same key again for a second photo"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Remove a before image",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/before-images",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image\": \"/uploads/replace-with-photo-path.jpg\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Save accessories in the car",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/car-accessories",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [\n    { \"accessoryId\": \"{{accessoryId}}\", \"presentBefore\": true },\n    { \"name\": \"Dashcam\", \"presentBefore\": true, \"note\": \"Front windshield\" }\n  ]\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "const row = (json.booking && json.booking.carAccessories || [])[0];",
+              "if (row) pm.collectionVariables.set('carAccessoryId', row._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mark included work done",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/work",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"completeAll\": true,\n  \"doneBy\": \"{{staffId}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Upload after images",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/after-images",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": "",
+              "description": "Same key again for a second photo"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Remove an after image",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/after-images",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"image\": \"/uploads/replace-with-photo-path.jpg\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Cross-check accessories",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/accessory-check",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"checkAll\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "Submit final check",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/bookings/{{bookingId}}/submit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notes\": \"Wash complete. Accessories checked.\",\n  \"workerIds\": [\"{{staffId}}\"]\n}"
+        }
+      }
+    }
+  ]
+}
