@@ -22,9 +22,22 @@ const isProd = process.env.NODE_ENV === 'production'
 const app = express()
 const port = process.env.PORT || 5000
 
+const clientOrigins = [
+  'https://gkkleankare.netlify.app',
+  'http://localhost:5000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+]
+for (const extra of [process.env.CLIENT_URL, process.env.ADMIN_URL]) {
+  if (extra && !clientOrigins.includes(extra)) clientOrigins.push(extra)
+}
+
 app.use(
   cors({
-    origin: true,
+    origin(origin, callback) {
+      if (!origin || clientOrigins.includes(origin)) return callback(null, true)
+      callback(null, false)
+    },
     credentials: true,
   }),
 )
