@@ -11,7 +11,6 @@ const accent = rgb(0.937, 0.169, 0.208)
 const white = rgb(1, 1, 1)
 const mist = rgb(0.45, 0.48, 0.53)
 const silver = rgb(0.28, 0.3, 0.34)
-const line = rgb(0.9, 0.91, 0.93)
 const cloud = rgb(0.965, 0.968, 0.975)
 const paidGreen = rgb(0.09, 0.48, 0.32)
 
@@ -95,17 +94,17 @@ export async function buildInvoicePdf(booking) {
     height: logoH,
   })
 
-  drawRight(page, 'TAX INVOICE', right, height - 48, 9, bold, rgb(0.78, 0.8, 0.84))
-  drawRight(page, invoice.number || 'Invoice', right, height - 72, 16, bold, white)
-  drawRight(page, formatDate(invoice.generatedAt), right, height - 92, 10, font, rgb(0.78, 0.8, 0.84))
+  drawRight(page, 'TAX INVOICE', right, height - 46, 10, bold, rgb(0.78, 0.8, 0.84))
+  drawRight(page, invoice.number || 'Invoice', right, height - 68, 14, bold, white)
+  drawRight(page, formatDate(invoice.generatedAt), right, height - 88, 10, font, rgb(0.78, 0.8, 0.84))
 
-  let y = height - headerH - 30
+  let y = height - headerH - 28
   const contact = `${studio.place} studio   ·   ${studio.phone}   ·   ${studio.email}`
-  page.drawText(contact, { x: margin, y, size: 9, font, color: silver })
-  y -= 14
-  for (const row of wrap(studio.address, font, 8.5, width - margin * 2).slice(0, 2)) {
-    page.drawText(row, { x: margin, y, size: 8.5, font, color: mist })
-    y -= 12
+  page.drawText(contact, { x: margin, y, size: 10, font, color: silver })
+  y -= 16
+  for (const row of wrap(studio.address, font, 10, width - margin * 2).slice(0, 2)) {
+    page.drawText(row, { x: margin, y, size: 10, font, color: mist })
+    y -= 14
   }
 
   y -= 16
@@ -128,88 +127,105 @@ export async function buildInvoicePdf(booking) {
   ].filter(Boolean)
 
   const writeCard = (title, lines, x) => {
-    page.drawText(title, { x, y: cardTop - 18, size: 8, font: bold, color: accent })
-    let lineY = cardTop - 38
+    page.drawText(title, { x, y: cardTop - 20, size: 10, font: bold, color: accent })
+    let lineY = cardTop - 40
     lines.slice(0, 4).forEach((row, index) => {
       page.drawText(row, {
         x,
         y: lineY,
-        size: index === 0 ? 12 : 9.5,
+        size: 10,
         font: index === 0 ? bold : font,
         color: index === 0 ? ink : silver,
       })
-      lineY -= index === 0 ? 18 : 13
+      lineY -= 16
     })
   }
   writeCard('BILL TO', customerLines, margin + 16)
   writeCard('VEHICLE', vehicleLines, margin + cardW + 30)
 
-  y = cardTop - cardH - 28
+  y = cardTop - cardH - 26
   const lines = (invoice.lines || []).filter((item) => item && (item.label || item.amount !== undefined))
   const rows = lines.length
     ? lines
     : [{ label: booking.serviceSnapshot?.title || 'Service', amount: invoice.total }]
 
-  page.drawRectangle({ x: margin, y: y - 8, width: width - margin * 2, height: 28, color: ink })
-  page.drawText('DESCRIPTION', { x: margin + 14, y: y, size: 8, font: bold, color: white })
-  drawRight(page, 'AMOUNT', right - 14, y, 8, bold, white)
-  y -= 28
+  const headH = 28
+  page.drawRectangle({ x: margin, y: y - headH, width: width - margin * 2, height: headH, color: ink })
+  page.drawText('Description', { x: margin + 14, y: y - 18, size: 10, font: bold, color: white })
+  drawRight(page, 'Amount', right - 14, y - 18, 10, bold, white)
+  y -= headH
 
   rows.forEach((item, index) => {
-    const description = wrap(item.label || 'Service', font, 11, 340).slice(0, 2)
-    const rowH = Math.max(30, 16 + description.length * 14)
+    const description = wrap(item.label || 'Service', font, 10, 340).slice(0, 2)
+    const rowH = description.length > 1 ? 40 : 28
     if (index % 2 === 0) {
-      page.drawRectangle({ x: margin, y: y - rowH + 16, width: width - margin * 2, height: rowH, color: cloud })
+      page.drawRectangle({ x: margin, y: y - rowH, width: width - margin * 2, height: rowH, color: cloud })
     }
     description.forEach((row, rowIndex) => {
-      page.drawText(row, { x: margin + 14, y: y - rowIndex * 13, size: 11, font, color: ink })
+      page.drawText(row, { x: margin + 14, y: y - 18 - rowIndex * 14, size: 10, font, color: ink })
     })
-    drawRight(page, money(item.amount), right - 14, y, 11, bold, ink)
+    drawRight(page, money(item.amount), right - 14, y - 18, 10, bold, ink)
     y -= rowH
   })
 
-  y -= 18
+  y -= 22
   const totals = [
     ['Subtotal', money(invoice.subtotal)],
     ['Discount', money(invoice.discount)],
     [`Tax (${invoice.taxPercent || 0}%)`, money(invoice.taxAmount)],
   ]
-  const boxW = 230
+  const boxW = 240
   const boxX = right - boxW
-  const boxH = 28 + totals.length * 18 + 36
-  page.drawRectangle({ x: boxX, y: y - boxH + 22, width: boxW, height: boxH, color: cloud })
+  const rowGap = 20
+  const summaryH = 16 + totals.length * rowGap
+  page.drawRectangle({
+    x: boxX,
+    y: y - summaryH,
+    width: boxW,
+    height: summaryH,
+    color: cloud,
+  })
 
-  let totalY = y
+  let rowY = y - 18
   for (const [label, amount] of totals) {
-    page.drawText(label, { x: boxX + 16, y: totalY, size: 10, font, color: silver })
-    drawRight(page, amount, right - 16, totalY, 10, font, ink)
-    totalY -= 18
+    page.drawText(label, { x: boxX + 16, y: rowY, size: 10, font, color: silver })
+    drawRight(page, amount, right - 16, rowY, 10, font, ink)
+    rowY -= rowGap
   }
-  page.drawRectangle({ x: boxX, y: totalY - 8, width: boxW, height: 32, color: ink })
-  page.drawText('TOTAL', { x: boxX + 16, y: totalY + 2, size: 11, font: bold, color: white })
-  drawRight(page, money(invoice.total), right - 16, totalY + 2, 13, bold, white)
+
+  const barH = 34
+  const barY = y - summaryH - barH
+  page.drawRectangle({ x: boxX, y: barY, width: boxW, height: barH, color: ink })
+  page.drawText('Total', { x: boxX + 16, y: barY + 12, size: 10, font: bold, color: white })
+  drawRight(page, money(invoice.total), right - 16, barY + 12, 10, bold, white)
 
   const paid = invoice.status === 'paid'
   const status = paid ? 'PAID' : 'UNPAID'
-  const badgeW = bold.widthOfTextAtSize(status, 9) + 22
+  const badgeW = bold.widthOfTextAtSize(status, 10) + 20
   page.drawRectangle({
     x: margin,
-    y: y - 4,
+    y: y - 22,
     width: badgeW,
     height: 20,
     color: paid ? paidGreen : accent,
   })
-  page.drawText(status, { x: margin + 11, y: y + 1, size: 9, font: bold, color: white })
+  page.drawText(status, { x: margin + 10, y: y - 16, size: 10, font: bold, color: white })
   if (invoice.method) {
-    page.drawText(clean(invoice.method), { x: margin + badgeW + 10, y: y + 1, size: 10, font, color: silver })
+    page.drawText(clean(invoice.method).toUpperCase(), {
+      x: margin + badgeW + 10,
+      y: y - 16,
+      size: 10,
+      font,
+      color: silver,
+    })
   }
   if (invoice.notes) {
-    let noteY = y - 28
-    page.drawText('NOTE', { x: margin, y: noteY, size: 8, font: bold, color: accent })
-    noteY -= 14
-    for (const row of wrap(invoice.notes, font, 9.5, 280).slice(0, 4)) {
-      page.drawText(row, { x: margin, y: noteY, size: 9.5, font, color: silver })
-      noteY -= 13
+    let noteY = y - 48
+    page.drawText('Note', { x: margin, y: noteY, size: 10, font: bold, color: accent })
+    noteY -= 16
+    for (const row of wrap(invoice.notes, font, 10, boxX - margin - 24).slice(0, 4)) {
+      page.drawText(row, { x: margin, y: noteY, size: 10, font, color: silver })
+      noteY -= 14
     }
   }
 
@@ -222,12 +238,20 @@ export async function buildInvoicePdf(booking) {
     font: bold,
     color: white,
   })
-  page.drawText('Payment is collected after you inspect the car. This is a computer-generated invoice.', {
-    x: margin,
-    y: 20,
-    size: 8,
+  const footerNote = wrap(
+    'Payment is collected after you inspect the car. This is a computer-generated invoice.',
     font,
-    color: rgb(0.75, 0.77, 0.8),
+    10,
+    width - margin * 2,
+  )
+  footerNote.forEach((row, index) => {
+    page.drawText(row, {
+      x: margin,
+      y: 20 - index * 12,
+      size: 10,
+      font,
+      color: rgb(0.75, 0.77, 0.8),
+    })
   })
 
   return Buffer.from(await pdf.save())
