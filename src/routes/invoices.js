@@ -53,7 +53,7 @@ router.get('/:bookingId/download', async (req, res) => {
       return res.status(403).json({ message: 'Not allowed' })
     }
 
-    const pdf = buildInvoicePdf(booking)
+    const pdf = await buildInvoicePdf(booking)
     const filename = `${booking.invoice.number}.pdf`
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
