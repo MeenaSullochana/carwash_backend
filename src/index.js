@@ -12,7 +12,9 @@ import serviceRoutes from './routes/services.js'
 import accessoryRoutes from './routes/accessories.js'
 import bookingRoutes from './routes/bookings.js'
 import invoiceRoutes from './routes/invoices.js'
+import contentRoutes from './routes/content.js'
 import { ensureCatalog } from './utils/ensureCatalog.js'
+import { ensureContent } from './utils/ensureContent.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendRoot = path.resolve(__dirname, '../../frontend')
@@ -54,10 +56,12 @@ app.use('/api/services', serviceRoutes)
 app.use('/api/accessories', accessoryRoutes)
 app.use('/api/bookings', bookingRoutes)
 app.use('/api/invoices', invoiceRoutes)
+app.use('/api', contentRoutes)
 
 await connectDB(process.env.MONGODB_URI)
 await seedIfEmpty()
 await ensureCatalog()
+await ensureContent()
 
 if (isProd) {
   app.use(express.static(frontendDist))
