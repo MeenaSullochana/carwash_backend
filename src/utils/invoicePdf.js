@@ -17,7 +17,7 @@ const paidGreen = rgb(0.09, 0.48, 0.32)
 const studio = {
   name: 'Geekay Klean Kare',
   place: 'Sriperumbudur',
-  phone: '+91 98765 43210',
+  phone: '044-27169190',
   email: 'hello@luxoraauto.com',
   address: 'SF No. 356/6A3A, Sri Vasuvui Nagar, Sungavarchatram, SIPCOT Industrial Park, Sriperumbudur.',
 }
